@@ -1,96 +1,55 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster as Sonner } from "@/components/ui/sonner"; // shadcn Sonner if used
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
-import NotFound from "./pages/NotFound";
 
-// --- START: CONSOLE INTERCEPTION SCRIPT ---
-const targetOrigin = '*'; // <-- IMPORTANT: SET YOUR PARENT ORIGIN
-// const targetOrigin = '*'; // Use '*' ONLY for local development if origins differ
+// Import generated pages
+import Homepage from "./pages/Homepage";
+import ServicesPage from "./pages/ServicesPage";
+import InsightsPage from "./pages/InsightsPage";
+import CareersPage from "./pages/CareersPage";
+import ContactUsPage from "./pages/ContactUsPage";
+import NotFound from "./pages/NotFound"; // Assumed to exist
 
-// Store original console methods
-const originalConsole = {
-    log: console.log.bind(console),
-    error: console.error.bind(console),
-    warn: console.warn.bind(console),
-    info: console.info.bind(console),
-};
-
-// Function to format arguments for postMessage
-function formatLogArguments(args) {
-    // (Keep the function as you defined it)
-    return args.map(arg => {
-        if (typeof arg === 'object' && arg !== null) {
-            try {
-                return JSON.parse(JSON.stringify(arg));
-            } catch (e) {
-                return '[Unserializable Object]';
-            }
-        }
-        return String(arg);
-    }).join(' ');
-}
-
-// Override console methods
-console.log = (...args) => {
-    originalConsole.log(...args);
-    try {
-        window.parent.postMessage({ type: 'console', level: 'log', message: formatLogArguments(args), timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting log message:", e); }
-};
-
-console.error = (...args) => {
-    originalConsole.error(...args);
-    try {
-        const message = formatLogArguments(args);
-        const stack = (args[0] instanceof Error) ? args[0].stack : new Error().stack;
-        window.parent.postMessage({ type: 'console', level: 'error', message: message, stack: stack, timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting error message:", e); }
-};
-
-console.warn = (...args) => {
-    originalConsole.warn(...args);
-    try {
-        window.parent.postMessage({ type: 'console', level: 'warn', message: formatLogArguments(args), timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting warn message:", e); }
-};
-
-console.info = (...args) => {
-    originalConsole.info(...args);
-    try {
-        window.parent.postMessage({ type: 'console', level: 'info', message: formatLogArguments(args), timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting info message:", e); }
-};
-
-// Catch unhandled errors and rejections
-window.addEventListener('error', (event) => {
-    originalConsole.error('Unhandled global error:', event.error || event.message);
-    try {
-        window.parent.postMessage({ type: 'console', level: 'error', message: `Unhandled global error: ${event.message}`, errorDetails: event.error ? formatLogArguments([event.error]) : null, stack: event.error ? event.error.stack : null, filename: event.filename, lineno: event.lineno, colno: event.colno, timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting global error message:", e); }
-});
-
-window.addEventListener('unhandledrejection', (event) => {
-    originalConsole.error('Unhandled promise rejection:', event.reason);
-    try {
-        window.parent.postMessage({ type: 'console', level: 'error', message: `Unhandled promise rejection: ${formatLogArguments([event.reason])}`, reason: formatLogArguments([event.reason]), stack: event.reason instanceof Error ? event.reason.stack : null, timestamp: new Date().toISOString() }, targetOrigin);
-    } catch (e) { originalConsole.error("Error posting rejection message:", e); }
-});
-
-console.log('Console interceptor initialized.');
-// --- END: CONSOLE INTERCEPTION SCRIPT ---
-
+const queryClient = new QueryClient();
 
 const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster /> {/* For shadcn Toasts */}
+      <Sonner /> {/* For shadcn Sonner toasts if preferred */}
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Index />} />
+          <Route path="/" element={<Homepage />} />
+          <Route path="/services" element={<ServicesPage />} />
+          {/* Example detail route, actual implementation would require a specific component */}
+          <Route path="/services/:serviceId" element={<ServicesPage />} /> 
+          <Route path="/services/:serviceId/:subServiceId" element={<ServicesPage />} /> 
+          
+          <Route path="/insights" element={<InsightsPage />} />
+          {/* Example detail route for an insight */}
+          <Route path="/insights/:insightSlug" element={<InsightsPage />} /> 
+          
+          <Route path="/careers" element={<CareersPage />} />
+          {/* Example detail route for a career */}
+          <Route path="/careers/apply/:jobId" element={<CareersPage />} /> 
+
+          <Route path="/contact-us" element={<ContactUsPage />} />
+          
+          {/* Placeholder routes for footer/other links if not covered by main pages */}
+          <Route path="/about" element={<NotFound />} /> {/* Assuming AboutPage is not yet built */}
+          <Route path="/privacy-policy" element={<NotFound />} />
+          <Route path="/terms-of-service" element={<NotFound />} />
+          <Route path="/faq" element={<NotFound />} />
+
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
+    </TooltipProvider>
+  </QueryClientProvider>
 );
 
 export default App;
